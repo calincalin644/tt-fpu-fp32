@@ -1,0 +1,115 @@
+Buffer selection and electrical repair investigation -- 2026-10-05
+
+MEASURED BASELINE
+30 MHz, four tiles, commit 5941ee3e441699cced583bc6123acbe72928576b.
+https://github.com/calincalin644/tt-fpu-fp32/actions/runs/37306072632
+Area excluding fillers: 48,082.4 um2; setup slack +10.384764 ns;
+minimum hold slack +0.0993 ns; 473 sequential cells.
+All counts below are from this artifact, not from a new hardening run.
+
+FINDINGS
+1. The final netlist contains 340 sky130_fd_sc_hd__clkdlybuf4s25_1 cells:
+   327 fanout buffers and 13 input buffers. These are clock-delay cells used
+   as data buffers. Their cell footprint totals about 3,403.3 um2.
+
+2. Post-placement design repair inserted 16 input buffers of this type,
+   then 394 repair buffers across 127 nets. Some cells were subsequently
+   resized. All eight buffers on the critical rounding path are already
+   present after this stage: seven clkdlybuf4s25_1 and one clkbuf_4.
+   These seven delay buffers were not inserted by the later hold repair.
+
+3. The separate post-CTS timing pass inserted 267 hold buffers. Every final
+   hold-prefixed instance is sky130_fd_sc_hd__dlygate4sd3_1. Their area is
+   approximately 2,672.6 um2. The proposed experiment leaves this family
+   available. The final timing-repair category totals 677 cells/6,532.5 um2.
+
+4. In max_ss_100C_1v60, 1,709 of 1,770 slew-violating pins (96.6%) lie on
+   167 nets driven by clkdlybuf4s25_1. Multiple pins on a net are counted:
+   this is NOT 1,709 separate nets or 1,709 delay-buffer instances.
+   Worst observed slew is 1.736589 ns at _4351_/A1, on net182 driven by
+   fanout182. Its limit is 0.75 ns. All seven capacitance violations are
+   outputs of the same cell type, including fanout66 on the critical path.
+   Example: fanout182/X has 0.110253 pF load versus a 0.094309 pF limit.
+   The library pin limit is tighter than the global 0.2 pF constraint.
+
+5. The checks report additionally lists 17 max-fanout violations: 16 clock
+   leaf buffers and one sequential output. These are separate from the
+   slew/capacitance totals in the summary and should be tracked explicitly.
+
+6. Automatic buffer selection currently has EXTRA_EXCLUDED_CELLS = null.
+   The flow explicitly selected clkdlybuf4s25_1 for input buffering and
+   fanout repair. SYNTH_BUFFER_CELL = buf_2 governs synthesis buffering;
+   it does not force the physical resizer to choose buf_2. The logs prove
+   the selection and insertion stage, but do not expose the internal
+   heuristic that preferred this cell. No tool-bug diagnosis is claimed.
+
+ACTIVE EXPERIMENT A -- ONE CONFIGURATION VARIABLE
+src/config.json now adds:
+  "EXTRA_EXCLUDED_CELLS": ["sky130_fd_sc_hd__clkdlybuf*"]
+
+This excludes the clock-delay-buffer family from synthesis and physical
+cell selection using the supported LibreLane variable. Excluding the family
+avoids simply substituting another clock-delay variant. Ordinary buf/clkbuf
+cells, CTS clock buffers, and dlygate/dlymetal hold-delay cells remain allowed.
+RTL, 30 MHz period, four tiles, density and hold margins are unchanged.
+The global transition and capacitance limits are not relaxed.
+
+This is a targeted experiment, not a validated fix. Faster data buffers may
+expose short paths, causing additional hold repair, and stronger buffers may
+increase local area. A new run must establish the net area and timing effects.
+Do not project a one-for-one replacement or guaranteed area saving.
+
+REPAIR SETTINGS REVIEW
+Post-global-placement design repair: enabled, 20% slew/cap margins.
+Post-CTS timing repair: enabled, 0.1 ns hold margin, 0.05 ns setup margin.
+Post-global-routing design repair: disabled.
+Post-global-routing timing repair: disabled.
+Configured post-route margins (currently inactive): 10% slew/cap;
+0.05 ns hold; 0.025 ns setup.
+RSZ_CORNERS is unset; repair logs actually read all nine corners. Do not
+mistake DEFAULT_CORNER = nom_tt for proof of typical-only repair.
+MAX_SLEW_VIOLATION_CORNERS and MAX_CAP_VIOLATION_CORNERS are [""], so the
+workflow can finish with electrical warnings. A green workflow alone is not
+an acceptance criterion for these experiments.
+
+FOLLOW-UP B -- NOT APPLIED
+If A improves buffer selection but leaves routed electrical violations,
+merge these overrides into A's src/config.json for a second run:
+  "RUN_POST_GRT_DESIGN_REPAIR": true,
+  "RUN_POST_GRT_RESIZER_TIMING": true
+
+The first pass addresses routed load/slew using routing estimates; the second
+allows setup/hold repair after those modifications. This pairing is deliberate
+because fixing slew can create shorter paths. Preserve existing margins and
+allow rerouting (GRT_DESIGN_REPAIR_RUN_GRT and GRT_RESIZER_RUN_GRT are already
+true). Compare against A rather than changing all settings in one run.
+If needed later, investigate corner policy/margins on the remaining nets.
+Do not weaken hold checks, raise the 0.75 ns transition limit, or disable
+subnormal/rounding functionality to make this experiment appear successful.
+After closure, consider enforcing electrical checks at all intended corners.
+
+NEXT-RUN REVIEW
+- Confirm the resolved EXTRA_EXCLUDED_CELLS list and zero clkdlybuf instances.
+- Compare functional gate tests, setup/hold at every corner, minimum pulse
+  checks where reported, slew/capacitance/fanout counts, DRC, LVS and antennas.
+- Compare non-filler area, hold-buffer count and critical-path endpoints.
+- Keep the 30 MHz baseline: 48,082.4 um2, 267 hold buffers, +10.384764 ns
+  setup, +0.0993 ns hold, 1,770 worst-corner slew pins, seven cap pins.
+- Keep the hold-repair margins; do not equate fewer buffers with better closure.
+
+REPRODUCIBILITY
+python3 docs/buffer-evidence/analyze.py /path/to/GDS_logs.zip
+The checked-in 30mhz-analysis.json records the archive hash, report attribution
+and insertion log excerpts. The parser targets the current mapped artifact
+and fails on an unresolved driver instead of guessing through net aliases.
+No new physical run or runtime configuration validation was performed locally.
+JSON syntax and the isolated configuration delta were checked.
+
+PRIMARY TOOL REFERENCES
+LibreLane universal configuration: EXTRA_EXCLUDED_CELLS; older RSZ_DONT_USE_CELLS
+is a deprecated alias, not the preferred new configuration name.
+https://librelane.readthedocs.io/en/latest/reference/common_flow_vars.html
+LibreLane repair settings and margins:
+https://librelane.readthedocs.io/en/latest/reference/step_config_vars.html
+OpenROAD resizer commands and instance-prefix definitions:
+https://openroad.readthedocs.io/en/latest/main/src/rsz/README.html
