@@ -4,7 +4,7 @@ This repository is based on the supplied SKY26d template (initial commit
 9234e50). Its existing GDS/precheck/gate-test/docs/FPGA action references remain
 on `ttsky26d`, with SKY130A selected by the GDS workflow. Four tiles are allocated
 as `2x2` in info.yaml. The first preparation used a 1 MHz target
-(1000 ns clock period); the current 18 MHz target is recorded below. Density
+(1000 ns clock period); the current 30 MHz target is recorded below. Density
 and hold margins retain template values.
 
 The source comes from the fpudiss multi-cycle FP32 design. Its FPGA predecessor
@@ -76,3 +76,17 @@ not establish ASIC timing closure; the hardening flow must verify the new target
 At the updated test clock, both RTL and local mapped-netlist cocotb suites
 passed: 2 tests each, including 1,115 exact arithmetic cases and protocol/abort
 checks. These are functional checks without SDF; 18 MHz timing is unproven.
+
+
+## 30 MHz hardening experiment
+
+Set clock_hz to 30,000,000 and CLOCK_PERIOD to 33.333333 ns. Keep the
+four-tile 2x2 allocation, placement density, repair margins, and RTL unchanged
+to isolate the effect of the tighter clock target. Cocotb uses a 33,334 ps
+period, rounded to an even number of picoseconds for equal half-cycles at
+1 ps simulator resolution; bus setup/sample delays remain 5 ns.
+
+The preceding 18 MHz routed run reported 32.640656 ns worst setup slack,
+but also slew and capacitance violations. This motivates the experiment;
+it does not establish timing closure at 30 MHz. The next GitHub hardening
+run must verify setup, hold, electrical checks, and physical area.

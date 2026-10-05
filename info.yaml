@@ -5,7 +5,7 @@ project:
   discord: ""
   description: "Multi-cycle FP32 add, subtract, multiply, divide and fixed-point conversions with byte-handshaked I/O"
   language: "SystemVerilog"
-  clock_hz: 18000000
+  clock_hz: 30000000
   tiles: "2x2"
   top_module: "tt_um_calincalin644_fpu_fp32"
   source_files:

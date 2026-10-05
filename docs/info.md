@@ -7,7 +7,7 @@ iterative alignment/normalization, a 24-step multiplier and a 28-step divider;
 overall latency depends on the operands. Poll completion rather than assuming
 a fixed number of cycles.
 
-The initial SKY26d hardening target is four tiles (`2x2`) at 18 MHz. This allocation
+The current SKY26d hardening target is four tiles (`2x2`) at 30 MHz. This allocation
 is a physical implementation trial, not a claim of successful hardening.
 
 ### Operations
@@ -53,7 +53,7 @@ mode and sign. This is not a claim of complete RISC-V F-extension compliance.
 | uio[5:2] | Input | Register address |
 | uio[6] | Output | Acknowledge toggle |
 | uio[7] | Output | Busy |
-| clk | Input | 18 MHz clock target |
+| clk | Input | 30 MHz clock target |
 | rst_n | Input | Active-low reset; hold for multiple clock edges |
 
 The chip drives only BIDIR bits 6 and 7 (`uio_oe=0xc0`). A controller driving

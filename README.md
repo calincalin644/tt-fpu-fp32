@@ -5,7 +5,7 @@ conversion to/from 32-bit sign-magnitude fixed point with 15 fractional bits.
 Operands and results use an acknowledged byte interface.
 
 - **Allocation:** `2x2` = four tiles.
-- **Clock target:** 18 MHz (`clock_hz: 18000000`, `CLOCK_PERIOD: 55.555556` ns).
+- **Clock target:** 30 MHz (`clock_hz: 30000000`, `CLOCK_PERIOD: 33.333333` ns).
 - **Top:** `tt_um_calincalin644_fpu_fp32`.
 - **Process/workflow:** SKY130A, `TinyTapeout/tt-gds-action@ttsky26d`.
 - [Pin protocol and numerical behavior](docs/info.md).

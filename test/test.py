@@ -66,7 +66,7 @@ class Bus:
 
 async def setup(dut):
     dut.clk.value = 0
-    cocotb.start_soon(Clock(dut.clk, 55556, unit="ps").start())
+    cocotb.start_soon(Clock(dut.clk, 33334, unit="ps").start())
     bus = Bus(dut)
     await bus.reset()
     return bus
