@@ -1,47 +1,28 @@
-# Sample testbench for a Tiny Tapeout project
+# FPU verification
 
-This is a sample testbench for a Tiny Tapeout project. It uses [cocotb](https://docs.cocotb.org/en/stable/) to drive the DUT and check the outputs.
-See below to get started or for more information, check the [website](https://tinytapeout.com/hdl/testing/).
-
-## Setting up
-
-1. Edit [Makefile](Makefile) and modify `PROJECT_SOURCES` to point to your Verilog files.
-2. Edit [tb.v](tb.v) and replace `tt_um_example` with your module name.
-
-## How to run
-
-To run the RTL simulation:
+`make` runs the cocotb tests in `test.py` through `tb.v`, which instantiates
+`tt_um_calincalin644_fpu_fp32`. No hierarchical forcing or internal RTL signal
+access is used. Check the result explicitly:
 
 ```sh
-make -B
+make
+python -m cocotb_tools.check_results results.xml
 ```
 
-To run gatelevel simulation, first harden your project and copy `../runs/wokwi/results/final/verilog/gl/{your_module_name}.v` to `gate_level_netlist.v`.
+`protocol_and_abort` checks reset, register access, invalid writes, writes during
+busy, result retention and ena abort. `exact_arithmetic` checks 1,115 arithmetic
+vectors and all five exception flags against `reference.py` (exact rationals).
 
-Then run:
+For the full 54,742-vector RTL pin regression:
 
 ```sh
-make -B GATES=yes
+python run_full.py
 ```
 
-If you wish to save the waveform in VCD format instead of FST format, edit tb.v to use `$dumpfile("tb.vcd");` and then run:
+GitHub's gate-test action supplies `gate_level_netlist.v` and the PDK. The same
+cocotb tests run with `make GATES=yes`; tb.v connects VPWR/VGND through wires.
+This checks the netlist from that specific hardening run.
 
-```sh
-make -B FST=
-```
-
-This will generate `tb.vcd` instead of `tb.fst`.
-
-## How to view the waveform file
-
-Using GTKWave
-
-```sh
-gtkwave tb.fst tb.gtkw
-```
-
-Using Surfer
-
-```sh
-surfer tb.fst
-```
+Waveform dumping is opt-in: `make SIM_ARGS="-fst +WAVES"`. Generated simulator
+files and logs are ignored by Git. See ../docs/development.md for completed
+local verification and its limits.

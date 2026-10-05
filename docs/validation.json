@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-05",
+  "tiles": "2x2",
+  "clock_hz": 18000000,
+  "clock_period_ns": 55.555556,
+  "top": "tt_um_calincalin644_fpu_fp32",
+  "rtl_full_vectors_passed": 54742,
+  "cocotb_rtl_tests_passed": 2,
+  "cocotb_local_mapped_gate_tests_passed": 2,
+  "cocotb_arithmetic_vectors_per_run": 1115,
+  "local_mapped_area_um2": 31071.0496,
+  "local_verilator": "not run: unavailable; package download DNS failure",
+  "physical_hardening": "not run",
+  "source_sha256": {
+    "info.yaml": "fadca7b6b893fe322433132ca1c7cdd74a5137f0fac28055058cc2beef1e3f96",
+    "src/config.json": "4e5e8b0a3c1bb3f05d34ddadde7ee4e28116eeb588fecba242bfe50368700b5d",
+    "src/flpoint_iterative.sv": "922f8b543adc43997a68c7bd35f0c8ca00289d8bd9c57483919a12cd130b0a66",
+    "src/tt_um_calincalin644_fpu_fp32.v": "c849605b5e56243afcae0725efe359b1ff0fa255052d94e19440a4e26daa6e42",
+    "test/test.py": "76e9cc5b31ac8c765d14f636639b371ec1acf82fa3ab27a1cc7afa422626341b",
+    "test/reference.py": "36d936e4237c3ac1f6cbe04a02adf99f6b11af4564bf203d53433799a2b36564",
+    "test/tb.v": "a14018d0b40b1874729504d4a5dfc45e260c64eb8a4fc9256098d7762ee6f5b4",
+    "test/pins_tb.sv": "d54df27caf0fe45caed7f93146cd3909769c5aa3206bd6c4592662d881faf4c8",
+    "test/run_full.py": "ce94f0336bbd72f816c5cb2e1b37db589d0f4ce01564902c9d86862fc93ac577"
+  },
+  "cocotb_clock_period_ps": 55556,
+  "local_gate_test_note": "Functional mapped-netlist simulation at the 18 MHz test clock; no SDF or physical timing validation."
+}

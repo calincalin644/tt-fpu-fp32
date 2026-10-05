@@ -1,42 +1,53 @@
-![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
+# FP32 Arithmetic Unit — Tiny Tapeout SKY26d
 
-# Tiny Tapeout Verilog Project Template
+Multi-cycle binary32 addition, subtraction, multiplication, division, and
+conversion to/from 32-bit sign-magnitude fixed point with 15 fractional bits.
+Operands and results use an acknowledged byte interface.
 
-- [Read the documentation for project](docs/info.md)
+- **Allocation:** `2x2` = four tiles.
+- **Clock target:** 18 MHz (`clock_hz: 18000000`, `CLOCK_PERIOD: 55.555556` ns).
+- **Top:** `tt_um_calincalin644_fpu_fp32`.
+- **Process/workflow:** SKY130A, `TinyTapeout/tt-gds-action@ttsky26d`.
+- [Pin protocol and numerical behavior](docs/info.md).
+- [Validation and provenance](docs/development.md).
 
-## What is Tiny Tapeout?
+## Start hardening
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+Commit and push this repository's changes to GitHub. The `gds`, `test`, and
+`docs` workflows run on push. Alternatively, after the changes are on GitHub,
+open **Actions → gds → Run workflow** and select the branch containing them:
 
-To learn more and get started, visit https://tinytapeout.com.
+https://github.com/calincalin644/tt-fpu-fp32/actions/workflows/gds.yaml
 
-## Set up your Verilog project
+The GDS workflow runs hardening, followed by precheck and gate-level tests.
+Inspect **all three** before treating the design as ready. Download `GDS_logs`
+and `tt_submission` artifacts from that exact run. The optional viewer job
+uses GitHub Pages; configure the repository's Pages source as GitHub Actions
+if you want the layout viewer. Its deployment is separate from the GDS result.
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
+No hardening run or four-tile fit has yet been established for this repository.
+The default placement density and hold-repair settings are retained. No timing
+exceptions or disabled lint checks were added.
 
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
+## Local tests
 
-## Enable GitHub actions to build the results page
+With Python, Icarus Verilog and vvp available:
 
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
+```sh
+python -m pip install -r test/requirements.txt
+cd test
+make
+python -m cocotb_tools.check_results results.xml
+cd ..
+python test/run_full.py
+```
 
-## Resources
+The cocotb suite checks 1,115 exact-reference arithmetic cases plus protocol,
+reset and disable behavior using only external pins; it is also used by the
+post-hardening gate-level workflow. The standalone full RTL test checks 54,742
+vectors. Expected results use exact rational arithmetic, not host float math.
+To generate waveforms, run `make SIM_ARGS="-fst +WAVES"` from `test/`.
 
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
-
-## What next?
-
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
+The source is self-contained in `src/`; no files from the parent workspace,
+FPGA primitives, original parallel FPU, board software, or game logic are
+needed by GitHub Actions.

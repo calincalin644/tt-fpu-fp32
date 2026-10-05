@@ -8,8 +8,10 @@ module tb ();
 
   // Dump the signals to a FST file. You can view it with gtkwave or surfer.
   initial begin
-    $dumpfile("tb.fst");
-    $dumpvars(0, tb);
+    if ($test$plusargs("WAVES")) begin
+      $dumpfile("tb.fst");
+      $dumpvars(0, tb);
+    end
     #1;
   end
 
@@ -27,8 +29,7 @@ module tb ();
   wire VGND = 1'b0;
 `endif
 
-  // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+  tt_um_calincalin644_fpu_fp32 user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST
